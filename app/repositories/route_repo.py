@@ -57,9 +57,7 @@ class SeatRepository:
 
     async def list_by_route(self, route_id: int) -> list[Seat]:
         result = await self.db.execute(
-            select(Seat)
-            .where(Seat.route_id == route_id)
-            .order_by(Seat.seat_number)
+            select(Seat).where(Seat.route_id == route_id).order_by(Seat.seat_number)
         )
         return list(result.scalars().all())
 

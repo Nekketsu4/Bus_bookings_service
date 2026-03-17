@@ -9,6 +9,7 @@ Topology:
 Publisher : FastStream RabbitBroker (used by BookingService)
 Consumer  : see app/services/worker.py  (runs inside the same process)
 """
+
 import logging
 
 from faststream.rabbit import (
@@ -51,6 +52,7 @@ rabbit_broker = RabbitBroker(
 
 
 # ── FastAPI dependency ─────────────────────────────────────────────────────────
+
 
 async def get_broker() -> RabbitBroker:
     return rabbit_broker

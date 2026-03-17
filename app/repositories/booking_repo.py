@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +27,7 @@ class BookingRepository:
         user_id: int,
         route_id: int,
         seat_id: int,
-        total_price: float,
+        total_price: Decimal,
     ) -> Booking:
         booking = Booking(
             user_id=user_id,

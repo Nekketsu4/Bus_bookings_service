@@ -8,6 +8,7 @@ from app.core.security import (
     get_current_user_id,
 )
 
+
 def test_hash_and_verify_password():
     """
     Проверяем что переданный пароль корректно
