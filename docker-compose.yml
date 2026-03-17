@@ -9,14 +9,39 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-#      rabbitmq:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
       interval: 5s
       timeout: 5s
+      retries: 5
+    networks:
+      - booking_net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: booking_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # Management UI → http://localhost:15672  guest/guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - booking_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: booking_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 5
     networks:
       - booking_net
