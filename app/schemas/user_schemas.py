@@ -5,8 +5,10 @@ from pydantic import BaseModel, EmailStr, Field
 
 class UserRegister(BaseModel):
     email: EmailStr
+    username: str
+    first_name: str
+    last_name: str
     password: str = Field(min_length=8, description="Minimum 8 characters")
-    full_name: str = Field(min_length=2, max_length=255)
 
 
 class UserLogin(BaseModel):
@@ -24,6 +26,8 @@ class UserOut(BaseModel):
 
     id: int
     email: str
-    full_name: str
+    username: str
+    first_name: str
+    last_name: str
     is_active: bool
     created_at: datetime
