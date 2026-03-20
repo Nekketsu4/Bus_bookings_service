@@ -3,9 +3,10 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.db.database import Base
+from app.db.database import Base, get_db
 from app.main import app
-
+from app.services.broker import get_broker
+from app.services.cache import get_cache
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -40,3 +41,38 @@ async def client():
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
+
+
+# ── Stubs for infra ────────────────────────────────────────────────────────────
+
+
+class _NullBroker:
+    """Drop-in stub for FastStream RabbitBroker — records published messages."""
+
+    def __init__(self):
+        self.published: list[tuple] = []
+
+    async def publish(self, message, *, queue=None, exchange=None, **_):
+        self.published.append((message, queue, exchange))
+
+
+class _NullCache:
+    async def get(self, _):
+        return None
+
+    async def set(self, *_, **__):
+        pass
+
+    async def delete(self, _):
+        pass
+
+    async def delete_pattern(self, _):
+        pass
+
+
+null_broker = _NullBroker()
+null_cache = _NullCache()
+
+app.dependency_overrides[get_db] = _override_db
+app.dependency_overrides[get_broker] = lambda: null_broker
+app.dependency_overrides[get_cache] = lambda: null_cache

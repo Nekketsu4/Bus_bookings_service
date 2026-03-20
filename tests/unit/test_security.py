@@ -52,9 +52,7 @@ async def test_get_current_user_id_invalid_token():
 
 @pytest.mark.asyncio
 async def test_get_current_user_id_missing_sub():
-    """
-    Проверка, что в токене есть payload с ключем sub
-    """
+    """Проверка, что в токене есть payload с ключем sub"""
     token = create_access_token({"data": "no sub field"})
     with pytest.raises(HTTPException) as exc:
         await get_current_user_id(token)
