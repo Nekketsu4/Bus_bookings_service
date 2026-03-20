@@ -68,12 +68,14 @@ class BookingService:
         user = await self._user.get_by_id(user_id)
         route_info = f"{route.origin} → {route.destination} ({route.departure_at:%d.%m.%Y %H:%M})"
 
+        event = BookingConfirmedEvent(
+            booking_id=booking.id,
+            user_email=user.email if user else "unknown",
+            route=route_info,
+        )
+
         await self._broker.publish(
-            BookingConfirmedEvent(
-                booking_id=booking.id,
-                user_email=user.email if user else "unknown",
-                route=route_info,
-            ),
+            event.model_dump(),
             queue=QUEUE_CONFIRMED,
             exchange=EXCHANGE,
         )
