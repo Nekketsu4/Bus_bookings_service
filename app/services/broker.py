@@ -26,9 +26,7 @@ logger = logging.getLogger(__name__)
 # ── Topology declarations ──────────────────────────────────────────────────────
 
 EXCHANGE = RabbitExchange(
-    name="booking.events",
-    type=ExchangeType.TOPIC,
-    durable=True,
+    name="booking.events", type=ExchangeType.TOPIC, durable=True, declare=True
 )
 
 QUEUE_CONFIRMED = RabbitQueue(
