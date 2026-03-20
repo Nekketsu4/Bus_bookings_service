@@ -41,15 +41,6 @@ async def my_bookings(
     return await repo.list_by_user(user_id)
 
 
-@router.get("/my", response_model=list[BookingOut], summary="My bookings history")
-async def my_bookings(
-    user_id: int = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db),
-):
-    repo = BookingRepository(db)
-    return await repo.list_by_user(user_id)
-
-
 @router.delete("/{booking_id}", response_model=BookingOut, summary="Cancel a booking")
 async def cancel_booking(
     booking_id: int,
