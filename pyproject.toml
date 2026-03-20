@@ -23,4 +23,5 @@ dependencies = [
     "httpx==0.28.1",
     "aiosqlite==0.20.0",
     "python-multipart>=0.0.22",
+    "pytest-cov>=7.0.0",
 ]
