@@ -24,6 +24,11 @@ class BookingStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class UserStatus(str, enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -36,6 +41,9 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(255), nullable=False)
     last_name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    role: Mapped[UserStatus] = mapped_column(
+        Enum(UserStatus), default=UserStatus.USER, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
