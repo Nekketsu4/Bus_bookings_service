@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.booking import UserStatus
+
 
 class UserRegister(BaseModel):
     email: EmailStr
@@ -30,4 +32,5 @@ class UserOut(BaseModel):
     first_name: str
     last_name: str
     is_active: bool
+    role: UserStatus
     created_at: datetime
