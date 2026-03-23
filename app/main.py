@@ -3,12 +3,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.exception.exception_handlers import register_exception_handlers
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.services.broker import (
     EXCHANGE,
     QUEUE_CANCELLED,
     QUEUE_CONFIRMED,
+    DEAD_LETTER_EXCHANGE,
+    QUEUE_DLQ,
     rabbit_broker,
 )
 from app.services.cache import cache
@@ -30,8 +33,10 @@ async def lifespan(app: FastAPI):
     #    even if the worker runs in a separate process.
     #    Both calls are idempotent — safe to run on every startup.
     await rabbit_broker.declare_exchange(EXCHANGE)
+    await rabbit_broker.declare_exchange(DEAD_LETTER_EXCHANGE)
     await rabbit_broker.declare_queue(QUEUE_CONFIRMED)
     await rabbit_broker.declare_queue(QUEUE_CANCELLED)
+    await rabbit_broker.declare_queue(QUEUE_DLQ)
 
     yield
 
@@ -62,6 +67,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.API_V1_STR)
     return app
 
