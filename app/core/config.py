@@ -48,5 +48,13 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+    # Rate limiting (requests per window)
+    # Окно в секундах и лимиты для каждой группы эндпоинтов.
+    # Все значения переопределяются через .env — удобно занижать в тестах.
+    RATE_LIMIT_WINDOW_SECONDS: int
+    RATE_LIMIT_AUTH: int  # login / register
+    RATE_LIMIT_BOOKINGS: int  # создание брони
+    RATE_LIMIT_DEFAULT: int  # всё остальное
+
 
 settings = Settings()
