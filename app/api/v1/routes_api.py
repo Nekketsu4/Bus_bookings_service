@@ -7,16 +7,17 @@ from app.db.database import get_db
 from app.repositories.route_repo import RouteRepository, SeatRepository
 from app.schemas import route_schemas, seat_schemas, pagination
 from app.services.cache import CacheService, get_cache
+from app.core.security import get_current_admin_user
 
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
 
-# добавить доступ этой ручки только для админа
 @router.post(
     "",
     response_model=route_schemas.RouteOut,
     status_code=201,
     summary="Create a new route (admin)",
+    dependencies=[Depends(get_current_admin_user)],
 )
 async def create_route(
     payload: route_schemas.RouteCreate,
