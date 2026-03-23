@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from faststream.rabbit import RabbitBroker
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rate_limit import rate_limit_bookings, rate_limit_default
 from app.core.security import get_current_user_id
 from app.db.database import get_db
 from app.repositories.booking_repo import BookingRepository
@@ -21,7 +22,13 @@ def _service(
     return BookingService(db=db, broker=broker, cache=cache)
 
 
-@router.post("", response_model=BookingOut, status_code=201, summary="Book a seat")
+@router.post(
+    "",
+    response_model=BookingOut,
+    status_code=201,
+    summary="Book a seat",
+    dependencies=[Depends(rate_limit_bookings)],
+)
 async def create_booking(
     payload: BookingCreate,
     user_id: int = Depends(get_current_user_id),
@@ -32,7 +39,12 @@ async def create_booking(
     return await service.create_booking(**booking_seat)
 
 
-@router.get("/my", response_model=list[BookingOut], summary="My bookings history")
+@router.get(
+    "/my",
+    response_model=list[BookingOut],
+    summary="My bookings history",
+    dependencies=[Depends(rate_limit_default)],
+)
 async def my_bookings(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
@@ -41,7 +53,12 @@ async def my_bookings(
     return await repo.list_by_user(user_id)
 
 
-@router.delete("/{booking_id}", response_model=BookingOut, summary="Cancel a booking")
+@router.delete(
+    "/{booking_id}",
+    response_model=BookingOut,
+    summary="Cancel a booking",
+    dependencies=[Depends(rate_limit_default)],
+)
 async def cancel_booking(
     booking_id: int,
     user_id: int = Depends(get_current_user_id),
