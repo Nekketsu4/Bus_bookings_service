@@ -1,31 +1,10 @@
 import pytest
 from httpx import AsyncClient
 
-from tests.conftest import null_broker
+from tests.conftest import null_broker, register_and_login
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
-
-
-async def _register_and_login(
-    client: AsyncClient,
-    email="user@test.com",
-    password="password123",
-) -> str:
-    await client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": email,
-            "password": password,
-            "first_name": "Aziev",
-            "last_name": "Kadir",
-            "username": "Some",
-        },
-    )
-    resp = await client.post(
-        "/api/v1/auth/login", data={"username": email, "password": password}
-    )
-    return resp.json()["access_token"]
 
 
 async def _create_route(client: AsyncClient, token: str) -> dict:
@@ -62,6 +41,7 @@ async def test_register_user(client: AsyncClient):
     )
     assert resp.status_code == 201
     assert resp.json()["email"] == "new@example.com"
+    assert resp.json()["role"] == "user"
 
 
 @pytest.mark.asyncio
@@ -123,7 +103,7 @@ async def test_health(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_route(client: AsyncClient):
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     assert route["origin"] == "Москва"
     assert route["id"] == 1
@@ -131,7 +111,7 @@ async def test_create_route(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_list_routes(client: AsyncClient):
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     await _create_route(client, token)
     resp = await client.get("/api/v1/routes")
     assert resp.status_code == 200
@@ -140,7 +120,7 @@ async def test_list_routes(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_list_seats(client: AsyncClient):
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     resp = await client.get(f"/api/v1/routes/{route['id']}/seats")
     assert resp.status_code == 200
@@ -156,7 +136,7 @@ async def test_list_seats(client: AsyncClient):
 async def test_create_booking_publishes_event(client: AsyncClient):
     """Booking confirmed → FastStream publishes BookingConfirmedEvent."""
     null_broker.published.clear()
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     seats = (await client.get(f"/api/v1/routes/{route['id']}/seats")).json()
 
@@ -177,7 +157,7 @@ async def test_create_booking_publishes_event(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_double_booking_same_seat(client: AsyncClient):
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     seats = (await client.get(f"/api/v1/routes/{route['id']}/seats")).json()
     seat_id = seats[0]["id"]
@@ -197,7 +177,7 @@ async def test_double_booking_same_seat(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_my_bookings(client: AsyncClient):
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     seats = (await client.get(f"/api/v1/routes/{route['id']}/seats")).json()
 
@@ -217,7 +197,7 @@ async def test_my_bookings(client: AsyncClient):
 async def test_cancel_booking_publishes_event(client: AsyncClient):
     """Booking cancelled → FastStream publishes BookingCancelledEvent."""
     null_broker.published.clear()
-    token = await _register_and_login(client)
+    token = await register_and_login(client, make_admin=True)
     route = await _create_route(client, token)
     seats = (await client.get(f"/api/v1/routes/{route['id']}/seats")).json()
 
@@ -245,8 +225,8 @@ async def test_cancel_booking_publishes_event(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_cancel_other_users_booking(client: AsyncClient):
-    token1 = await _register_and_login(client, "user1@test.com")
-    token2 = await _register_and_login(client, "user2@test.com")
+    token1 = await register_and_login(client, "user1@test.com", make_admin=True)
+    token2 = await register_and_login(client, "user2@test.com", make_admin=True)
 
     route = await _create_route(client, token1)
     seats = (await client.get(f"/api/v1/routes/{route['id']}/seats")).json()
